@@ -75,6 +75,15 @@ class Bf_Tinymce_Bootstrap {
 	protected $version;
 
 	/**
+	 * Loading or no, bootstrap cdn styles.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      boolean    $cdn    Should we load bootstrap CDN.
+	 */
+	protected $cdn;
+
+	/**
 	 * Define the core functionality of the plugin.
 	 *
 	 * Set the plugin name and the plugin version that can be used throughout the plugin.
@@ -90,6 +99,9 @@ class Bf_Tinymce_Bootstrap {
 			$this->version = '1.0.0';
 		}
 		$this->plugin_name = 'bf-tinymce-bootstrap';
+
+		// @todo make this options configurable
+		$this->cdn = false;
 
 		if ( is_admin() ) {
 			add_action( 'init', array(  $this, 'setup_tinymce_plugin' ) );
@@ -119,7 +131,8 @@ class Bf_Tinymce_Bootstrap {
 		// Setup some filters
 		add_filter( 'mce_external_plugins', array( &$this, 'add_tinymce_plugin' ) );
 		add_filter( 'mce_buttons', array( &$this, 'add_tinymce_toolbar_button' ) );
-		add_action( 'admin_init', array( &$this, 'add_bootstrap_cdn' ) );
+		if($this->cdn)
+			add_action( 'admin_init', array( &$this, 'add_bootstrap_cdn' ) );
 			 
 	}
 
