@@ -37,46 +37,118 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'PLUGIN_NAME_VERSION', '1.0.0' );
 
-/**
- * The code that runs during plugin activation.
- * This action is documented in includes/class-bf-tinymce-bootstrap-activator.php
- */
-function activate_bf_tinymce_bootstrap() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-bf-tinymce-bootstrap-activator.php';
-	Bf_Tinymce_Bootstrap_Activator::activate();
-}
+
+
 
 /**
- * The code that runs during plugin deactivation.
- * This action is documented in includes/class-bf-tinymce-bootstrap-deactivator.php
- */
-function deactivate_bf_tinymce_bootstrap() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-bf-tinymce-bootstrap-deactivator.php';
-	Bf_Tinymce_Bootstrap_Deactivator::deactivate();
-}
-
-register_activation_hook( __FILE__, 'activate_bf_tinymce_bootstrap' );
-register_deactivation_hook( __FILE__, 'deactivate_bf_tinymce_bootstrap' );
-
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require plugin_dir_path( __FILE__ ) . 'includes/class-bf-tinymce-bootstrap.php';
-
-/**
- * Begins execution of the plugin.
+ * The core plugin class.
  *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
+ * This is used to define internationalization, admin-specific hooks, and
+ * public-facing site hooks.
  *
- * @since    1.0.0
+ * Also maintains the unique identifier of this plugin as well as the current
+ * version of the plugin.
+ *
+ * @since      1.0.0
+ * @package    Bf_Tinymce_Bootstrap
+ * @subpackage Bf_Tinymce_Bootstrap/includes
+ * @author     Benfarhat Elyes <Benfarhat.elyes@gmail.com>
  */
-function run_bf_tinymce_bootstrap() {
+class Bf_Tinymce_Bootstrap {
 
-	$plugin = new Bf_Tinymce_Bootstrap();
-	$plugin->run();
+	/**
+	 * The unique identifier of this plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $plugin_name    The string used to uniquely identify this plugin.
+	 */
+	protected $plugin_name;
+
+	/**
+	 * The current version of the plugin.
+	 *
+	 * @since    1.0.0
+	 * @access   protected
+	 * @var      string    $version    The current version of the plugin.
+	 */
+	protected $version;
+
+	/**
+	 * Define the core functionality of the plugin.
+	 *
+	 * Set the plugin name and the plugin version that can be used throughout the plugin.
+	 * Load the dependencies, define the locale, and set the hooks for the admin area and
+	 * the public-facing side of the site.
+	 *
+	 * @since    1.0.0
+	 */
+	public function __construct() {
+		if ( defined( 'PLUGIN_NAME_VERSION' ) ) {
+			$this->version = PLUGIN_NAME_VERSION;
+		} else {
+			$this->version = '1.0.0';
+		}
+		$this->plugin_name = 'bf-tinymce-bootstrap';
+
+		if ( is_admin() ) {
+			add_action( 'init', array(  $this, 'setup_tinymce_plugin' ) );
+		}
+
+	}
+
+	/**
+	* Check if the current user can edit Posts or Pages, and is using the Visual Editor
+	* If so, add some filters so we can register our plugin
+	*/
+	function setup_tinymce_plugin() {
+	
+		// Check if the logged in WordPress User can edit Posts or Pages
+		// If not, don't register our TinyMCE plugin
+			
+		if ( ! current_user_can( 'edit_posts' ) && ! current_user_can( 'edit_pages' ) ) {
+					return;
+		}
+		
+		// Check if the logged in WordPress User has the Visual Editor enabled
+		// If not, don't register our TinyMCE plugin
+		if ( get_user_option( 'rich_editing' ) !== 'true' ) {
+		return;
+		}
+		
+		// Setup some filters
+		add_filter( 'mce_external_plugins', array( &$this, 'add_tinymce_plugin' ) );
+		add_filter( 'mce_buttons', array( &$this, 'add_tinymce_toolbar_button' ) );
+			 
+	}
+
+	/**
+	* Adds a TinyMCE plugin compatible JS file to the TinyMCE / Visual Editor instance
+	*
+	* @param array $plugin_array Array of registered TinyMCE Plugins
+	* @return array Modified array of registered TinyMCE Plugins
+	*/
+	function add_tinymce_plugin( $plugin_array ) {
+	
+		$plugin_array['bf_mce_bootstrap'] = plugin_dir_url( __FILE__ ) . 'tinymce-custom-link-class.js';
+		return $plugin_array;
+
+		
+	}
+
+	/**
+	* Adds a button to the TinyMCE / Visual Editor which the user can click
+	* to insert a link with a custom CSS class.
+	*
+	* @param array $buttons Array of registered TinyMCE Buttons
+	* @return array Modified array of registered TinyMCE Buttons
+	*/
+	function add_tinymce_toolbar_button( $buttons ) {
+	
+		array_push( $buttons, '|', 'bf_mce_bootstrap' );
+		return $buttons;
+	}
 
 }
-run_bf_tinymce_bootstrap();
+
+$plugin = new Bf_Tinymce_Bootstrap();
