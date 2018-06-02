@@ -119,6 +119,7 @@ class Bf_Tinymce_Bootstrap {
 		// Setup some filters
 		add_filter( 'mce_external_plugins', array( &$this, 'add_tinymce_plugin' ) );
 		add_filter( 'mce_buttons', array( &$this, 'add_tinymce_toolbar_button' ) );
+		add_action( 'admin_init', array( &$this, 'add_bootstrap_cdn' ) );
 			 
 	}
 
@@ -147,6 +148,13 @@ class Bf_Tinymce_Bootstrap {
 	
 		array_push( $buttons, '|', 'bf_mce_bootstrap' );
 		return $buttons;
+	}
+
+	/**
+	 * Register and load Bootstrap 4.0.0 CDN to WP Editor
+	 */
+	function add_bootstrap_cdn() {
+		add_editor_style( '//netdna.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css' );
 	}
 
 }
